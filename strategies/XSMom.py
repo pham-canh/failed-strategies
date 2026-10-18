@@ -14,7 +14,9 @@ UNIVERSE = json.loads(
 )
 
 _SWEEP = {}
-_sweep_file = Path("/tmp/ft_sweep.json")
+# Overridable so no strategy is pinned to one machine's /tmp. The file is
+# optional: without it the defaults below are used.
+_sweep_file = Path(os.environ.get("FT_SWEEP", "/tmp/ft_sweep.json"))
 if _sweep_file.exists():
     _SWEEP = json.loads(_sweep_file.read_text())
 

@@ -11,7 +11,12 @@ DATA_DIR = os.environ.get(
 )
 
 _SWEEP = {}
-_sweep_file = Path(os.environ.get("PA_SWEEP", "/tmp/ft_sweep.json"))
+# Overridable so no strategy is pinned to one machine's /tmp. The file is
+# optional: without it the defaults below are used. PA_SWEEP is the older
+# name and still wins if it is the only one set, so existing sweeps keep working.
+_sweep_file = Path(
+    os.environ.get("FT_SWEEP", os.environ.get("PA_SWEEP", "/tmp/ft_sweep.json"))
+)
 if _sweep_file.exists():
     _SWEEP = json.loads(_sweep_file.read_text())
 

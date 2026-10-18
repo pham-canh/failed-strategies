@@ -123,7 +123,7 @@ So sánh với các chiến lược ĐÃ THÀNH CÔNG (repo `crypto-quant-strate
 **Lỗ ở đâu:**
 
 - **BẤT KHẢ THI trên freqtrade futures-only**: freqtrade chỉ có chân futures. Không có chân **spot** để tạo vị thế delta-neutral → long leg bị bỏ lửng, hứng toàn bộ rủi ro giá.
-- Đã chứng minh bằng `research/carry_neutral.py`: +4852 USDT chỉ tồn tại **nếu có spot leg**. Futures-only thì không.
+- Đã tự kiểm chứng bằng một backtest scratch dùng spot (giả lập giá spot bằng giá perp trên cùng khung thời gian): +4852 USDT chỉ tồn tại **khi có spot leg**. Futures-only thì không. Script scratch đó **không nằm trong repo này** — repo này chỉ chứa những gì chạy được trên freqtrade futures.
 - (Bản `Carry.py` này chỉ short coin funding dương → đây thực chất là **short-momentum không bộ lọc**, không phải carry thuần.)
 
 **Bài học:** Funding-carry delta-neutral là ý tưởng học thuật hợp lý nhưng **không chạy được trong kiến trúc futures-only của freqtrade**. Cần sàn khác có spot+perp đồng thời (hoặc dùng FundingCapture short-only với bộ lọc — đã chứng minh lời +424).
@@ -147,7 +147,7 @@ So sánh với các chiến lược ĐÃ THÀNH CÔNG (repo `crypto-quant-strate
 
 ## Cách chạy lại
 
-Đã portable hóa — không có đường dẫn tuyệt đối. Mặc định trỏ vào repo này (`universe.json`, `pairs_dyn.json` ở root) và `user_data/data/binance/futures` tương đối.
+Mọi đường dẫn đều **ghi đè được bằng biến môi trường**, không cái nào ghi cứng vào mã nguồn. Mặc định trỏ vào repo này (`universe.json`, `pairs_dyn.json` ở root) và `user_data/data/binance/futures` tương đối.
 
 ```bash
 # Data dir (feather files từ freqtrade download-data --include-initial-candle)
@@ -156,6 +156,11 @@ export FT_DATA_DIR=/path/to/user_data/data/binance/futures   # mặc định: us
 export FT_UNIVERSE=/path/to/universe.json                     # mặc định: <repo>/universe.json
 # Pairs file (chỉ PairsDyn)
 export FT_PAIRS=/path/to/pairs_dyn.json                       # mặc định: <repo>/pairs_dyn.json
+# Sweep tuning file, dùng bởi Carry / XSMom / TsMom / PairsDyn. TUỲ CHỌN:
+# không có thì strategy chạy với default của chính nó.
+export FT_SWEEP=/path/to/sweep.json                           # mặc định: /tmp/ft_sweep.json
+#   (PairsDyn trước đây chỉ đọc PA_SWEEP — vẫn còn hỗ trợ, và thắng nếu cả hai
+#    đều được đặt.)
 
 freqtrade backtesting -s XSMom --timeframe 1h --timerange 20250201-20260801 \
   --dataformat-ohlcv feather -c your-config.json
