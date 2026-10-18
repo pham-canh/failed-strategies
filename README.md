@@ -1,6 +1,41 @@
 # Failed Strategies
 
+[![ci](https://github.com/pham-canh/failed-strategies/actions/workflows/ci.yml/badge.svg)](https://github.com/pham-canh/failed-strategies/actions/workflows/ci.yml) ![license](https://img.shields.io/badge/license-MIT-green)
+
 Bộ sưu tập các chiến lược giao dịch futures ĐÃ THẤT BẠI trong backtest — lưu lại kèm post-mortem chi tiết: **lỗ ở đâu, tại sao lỗ**, và bài học rút ra. Đây là tài liệu tham khảo để KHÔNG lặp lại sai lầm, không phải code để dùng thật.
+
+---
+
+## English summary
+
+Six Binance-futures strategies that **failed** in backtest, kept with a post-mortem for each: what broke, why, and what it teaches. This is reference material for avoiding repeat mistakes — not production code. The full post-mortems below are in Vietnamese; this section is the English map.
+
+**Backtest setup (mandatory context):**
+
+- **Window:** full 18 months, `20250201–20260801`, timeframe **1h**, 43-coin universe (`universe.json`), Binance futures.
+- **Only the freqtrade engine is trusted.** Vectorized sim numbers were used only for screening; the sim guessed wrong repeatedly, so every headline figure below is a `freqtrade backtesting` run.
+- **⚠️ The window is strongly bear-biased.** Essentially all profit in this period came from the **short** side. A long uptrend would change the picture. There is no out-of-window data.
+
+**Results:**
+
+| Strategy         | PnL (USDT)  | Sharpe | Max DD      | Verdict                                                        |
+| ---------------- | ----------- | ------ | ----------- | -------------------------------------------------------------- |
+| FundingSmoothTrend | **−621.0**  | —      | 697.2 (68%) | ❌ Long-only trend-following dies in a bear market             |
+| XSMom              | +15.2       | 0.03   | 431.4 (43%) | ❌ Cross-sectional momentum — return not worth the drawdown   |
+| TsMom              | +3.4        | 0.01   | 196.1       | ❌ Long-only momentum is ~flat                                 |
+| LowVol             | +57.7       | 0.16   | 402.1       | ❌ Funding tax consumes ~52% of gross profit                   |
+| Carry              | +4852 (sim) | —      | —           | ❌ **Not implementable futures-only** (needs a spot leg)       |
+| PairsDyn           | −525.0      | −3.23  | —           | ❌ Rolling pair selection loses in every variant tried         |
+
+**Three lessons that repeat across almost every strategy above:**
+
+1. **Long-only dies in a bear market.** Every strategy that won here has either a regime filter or a short leg.
+2. **A loose signal is just noise.** Tightening exits, resampling pairs, and resetting EWM state all destroyed the edge rather than adding to it.
+3. **The edge is concentrated and does not generalise.** Ten different pair-selection methods were swept and all lost. Correlation tightness turned out to be unrelated to profitability.
+
+**How to reproduce:** see [Cách chạy lại](#cách-chạy-lại) below.
+
+---
 
 ## Bối cảnh kiểm định (bắt buộc đọc)
 
